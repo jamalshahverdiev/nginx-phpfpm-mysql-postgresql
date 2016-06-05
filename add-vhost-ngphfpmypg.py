@@ -36,14 +36,6 @@ def vhhtmlwriter():
     with open(os.getcwd()+'/output/index.html', 'wb') as indhtml:
         indhtml.write(outputnghText)
 
-def sqlservicecheck(pidfile, pid):
-    if pidfile == pid:
-        print('SQL service already running...')
-        pass
-    else:
-        print('SQL service is not running...')
-        sys.exit()
-
 def prandwainput():
     print('Virtual host '+sitename+' already configured...')
     print(' 1. To add MySQL database for this virtual host write 1 and press "Enter"!!!')
@@ -85,73 +77,6 @@ def pgphpcreater():
     put(os.getcwd()+'/output/cfpgpinsert.php', '/var/www/'+sitename+'/html/insert.php')
     put(os.getcwd()+'/jinja2temps/cfindex.html', '/var/www/'+sitename+'/html/index.html')
 
-def ngprintexit():
-    print(' You have already installed and running Nginx web server...')
-    print(' If you want add new VirtualHost, please use ./add-vhost-ngphfpmy.py script.')
-    sys.exit()
-
-def hostnametohosts():
-    ip = run('ifconfig `ifconfig | head -n1 | cut -f1 -d\':\'` | grep \'inet \' | awk \'{ print $2 }\'')
-    name = run('hostname')
-    run('echo \"'+ip+' '+name+'.lan '+name+'\" >> /etc/hosts')
-
-def phpfpmconf():
-    put(os.getcwd()+'/jinja2temps/f10php-fpm.conf', '/usr/local/etc/php-fpm.conf')
-    put(os.getcwd()+'/jinja2temps/f10php.ini', '/usr/local/etc/php.ini')
-    run('sysrc php_fpm_enable="YES"') 
-    run('mkdir /var/run/php-fpm/')
-    run('/usr/local/etc/rc.d/php-fpm start')
-    run('service nginx restart')
-
-def fmysqlinstaller():
-    print(' You have chose MySQL with PHP-FPM!')
-    print(' Please be patient, it will take some time...')
-    run('pkg install -y mysql56-server php56 php56-mysql')
-    run('sysrc mysql_enable="YES"')
-    run('pkg install -y php56-bz2 php56-mysql php56-mysqli php56-calendar php56-ctype php56-curl php56-dom php56-exif php56-fileinfo php56-filter php56-gd ph    p56-gettext php56-hash php56-iconv php56-json php56-mbstring php56-mcrypt php56-openssl php56-posix php56-session php56-simplexml php56-tokenizer php56-wddx php56-xml php56-xmlreader php56-xmlwriter php56-xmlrpc php56-xsl php56-zip php56-zlib')
-    run('/usr/local/etc/rc.d/mysql-server start')
-    run('echo -e "\n\nfreebsd\nfreebsd\n\n\n\n\n" | mysql_secure_installation 2>/dev/null')
-    msqlpid = run('ps waux|grep mysql | grep -v grep| grep -v safe | awk \'{ print $2 }\'')
-    msqlpidf = run('cat /var/db/mysql/*.pid')
-    sqlservicecheck(msqlpidf, msqlpid)
-    dbcreds()
-    run('mysql -u root -p\'freebsd\' -e "CREATE DATABASE '+sitedb+';"')
-    run('mysql -u root -p\'freebsd\' -e "GRANT ALL PRIVILEGES ON '+sitedb+'.* TO '+sitedbuser+'@localhost IDENTIFIED BY \''+sitedbpasswd+'\';"')
-    run('mysql -u root -p\'freebsd\' -e "FLUSH PRIVILEGES;"')
-    phpfpmconf()
-    inphpcreater()
-    print('MySQL, Nginx and PHP-FPM installed and configured...')
-
-def fpgsqlinstaller():
-    print(' You have chose PostgreSQL with PHP-FPM!')
-    print(' Please be patient, it will take some time...')
-    run('pkg install -y postgresql93-server php56 php56-pgsql ; sysrc postgresql_enable="YES" ; /usr/local/etc/rc.d/postgresql initdb')
-    put(os.getcwd()+'/jinja2temps/f10postresql.conf', '/usr/local/pgsql/data/postgresql.conf')
-    put(os.getcwd()+'/jinja2temps/f10pg_hba.conf', '/usr/local/pgsql/data/pg_hba.conf')
-    run('/usr/local/etc/rc.d/postgresql start')
-    pgsqlpid = run('ps waux|grep /usr/local/bin/postgres | grep -v grep | awk \'{ print $2 }\'')
-    pgsqlpidf = run('cat /usr/local/pgsql/data/postmaster.pid | head -1')
-    sqlservicecheck(pgsqlpidf, pgsqlpid)
-    run('su - pgsql -c "createdb"')
-    dbcreds()
-    oversitepass = "'\\'%s\\''" % sitedbpasswd
-    run('su - pgsql -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
-    run('su - pgsql -c "psql -c \'CREATE USER '+sitedbuser+' WITH PASSWORD '+oversitepass+';\'"')
-    run('su - pgsql -c "psql -c \'GRANT ALL PRIVILEGES ON DATABASE '+sitedb+' TO '+sitedbuser+';\'"')
-    run('su - pgsql -c "psql -c \'CREATE TABLE book( bookid CHAR(255), bookname CHAR(255), author CHAR(255), publisher CHAR(255), dop CHAR(255), price CHAR(255) );\' '+sitedb+'"')
-    run('su - pgsql -c "psql -c \'GRANT ALL PRIVILEGES ON TABLE book  TO '+sitedbuser+';\' '+sitedb+'"')
-    phpfpmconf()
-    pgphpcreater()
-    print('PostgreSQL, Nginx and PHP-FPM installed and configured...')
-
-def nginstall():
-    run('yum -y install epel-release')
-    run('yum -y install nginx ; systemctl start nginx')
-    run('mkdir /etc/nginx/sites-enabled/ /etc/nginx/sites-available/')
-    run('mkdir -p /var/www/'+sitename+'/html')
-    put(os.getcwd()+'/jinja2temps/c7nginx.conf', '/etc/nginx/nginx.conf')
-    run('chown -R nginx:nginx /var/www/ ; chmod -R 755 /var/www')
-
 def c7vhostcreate():
     run('mkdir -p /var/www/'+sitename+'/html')
     put(os.getcwd()+'/output/'+sitename+'.conf', '/etc/nginx/sites-available/')
@@ -164,53 +89,6 @@ def f10vhostcreate():
     put(os.getcwd()+'/output/'+sitename+'.conf', '/usr/local/etc/nginx/sites-available/')
     put(os.getcwd()+'/output/index.html', '/var/www/'+sitename+'/html/')
     run('ln -s /usr/local/etc/nginx/sites-available/* /usr/local/etc/nginx/sites-enabled/ ; service nginx restart')
-
-def c7mysqlinstaller():
-    print(' You have selected "Enter" button!!!')
-    print(' Please be patient, it will take some time...')
-    run('yum -y install php php-mysql php-fpm')
-    put(os.getcwd()+'/jinja2temps/c7php.ini', '/etc/php.ini')
-    put(os.getcwd()+'/jinja2temps/c7www.conf', '/etc/php-fpm.d/www.conf')
-    run('systemctl start php-fpm ; systemctl enable php-fpm')
-    run('yum -y install mariadb-server mariadb ; systemctl enable mariadb ; systemctl start mariadb')
-    run('echo -e "\n\nfreebsd\nfreebsd\n\n\n\n\n" | mysql_secure_installation 2>/dev/null')
-    msqlpidfile = run('ps waux|grep mysql | grep -v grep| grep -v safe | awk \'{ print $2 }\'')
-    msqlpid = run('cat /var/run/mariadb/mariadb.pid')
-    sqlservicecheck(msqlpidfile, msqlpid)
-    dbcreds()
-    run('mysql -u root -p\'freebsd\' -e "CREATE DATABASE '+sitedb+';"')
-    run('mysql -u root -p\'freebsd\' -e "GRANT ALL PRIVILEGES ON '+sitedb+'.* TO '+sitedbuser+'@localhost IDENTIFIED BY \''+sitedbpasswd+'\';"')
-    run('mysql -u root -p\'freebsd\' -e "FLUSH PRIVILEGES;"')
-    inphpcreater()
-    run('systemctl restart nginx')
-    print('MySQL, Nginx and PHP-FPM installed and configured...')
-
-def c7pgsqlinstaller():
-    print(' You have chose PostgreSQL with PHP-FPM!')
-    print(' Please be patient, it will take some time...')
-    run('yum -y install epel-release ; yum -y groupinstall "Development Tools" ; yum -y install php php-fpm php-gd php-pgsql php-mbstring php-xml ; yum -y install postgresql-server')
-    run('postgresql-setup initdb')
-    put(os.getcwd()+'/jinja2temps/c7php.ini', '/etc/php.ini')
-    put(os.getcwd()+'/jinja2temps/c7www.conf', '/etc/php-fpm.d/www.conf')
-    run('systemctl start php-fpm ; systemctl enable php-fpm')
-    put(os.getcwd()+'/jinja2temps/f10pg_hba.conf', '/var/lib/pgsql/data/pg_hba.conf')
-    put(os.getcwd()+'/jinja2temps/c7postresql.conf', '/var/lib/pgsql/data/postgresql.conf')   
-    run('systemctl start postgresql ; systemctl enable postgresql')
-    psqlpidf = run('ps waux|grep /usr/bin/postgres | grep -v grep | awk \'{ print $2 }\'')
-    psqlpid = run('cat /usr/local/pgsql/data/postmaster.pid | head -1')
-    sqlservicecheck(psqlpidf, psqlpid)
-    run('su - postgres -c "createdb"')
-    dbcreds()
-    oversitepass = "'\\'%s\\''" % sitedbpasswd
-    run('su - postgres -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
-    run('su - postgres -c "psql -c \'CREATE USER '+sitedbuser+' WITH PASSWORD '+oversitepass+';\'"')
-    run('su - postgres -c "psql -c \'GRANT ALL PRIVILEGES ON DATABASE '+sitedb+' TO '+sitedbuser+';\'"')
-    run('su - postgres -c "psql -c \'CREATE TABLE book( bookid CHAR(255), bookname CHAR(255), author CHAR(255), publisher CHAR(255), dop CHAR(255), price CHAR(255) );\' '+sitedb+'"')
-    run('su - postgres -c "psql -c \'GRANT ALL PRIVILEGES ON TABLE book  TO '+sitedbuser+';\' '+sitedb+'"')
-    phpfpmconf()
-    pgphpcreater()
-    print('PostgreSQL, Nginx and PHP-FPM installed and configured...')
-
 
 def checkvhexists():
     if sitename == domex:
@@ -314,7 +192,7 @@ with settings(
             vhhtmlwriter()
             f10vhostcreate()
         else:
-            print(' Nginx server is not running. For install Nginx web server please use ./ngphfpmy.py script...')
+            print(' Nginx server is not running. For install Nginx web server please use ./ngphfpmypg.py script...')
             sys.exit()
         prandwainput()
         dbornotselect()
@@ -330,7 +208,7 @@ with settings(
             vhhtmlwriter()
             c7vhostcreate()
         else:
-            print(' Nginx server is not running. For install Nginx web server please use ./ngphfpmy.py script...')
+            print(' Nginx server is not running. For install Nginx web server please use ./ngphfpmypg.py script...')
             sys.exit()
         prandwainput()
         dbornotselect()
