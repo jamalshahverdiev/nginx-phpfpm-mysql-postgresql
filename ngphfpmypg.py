@@ -234,7 +234,7 @@ with settings(
             elif inst == "2":
                 fpgsqlinstaller()
             else:
-                print('You can only press "Enter" button or write "n" and after press enter button!!!')
+                print('You pressed "Enter" button, exiting!!!')
     elif osver == 'Linux' and lintype == 'CentOS':
         print(' This is CentOS server...')
         getlngdpack = run('which nginx')
@@ -254,6 +254,6 @@ with settings(
             elif inst == "2":
                 c7pgsqlinstaller()
             else:
-                print('You can only press "Enter" button or write "n" and after press enter button!!!')
+                print('You pressed "Enter" button, exiting!!!')
     else:
         print(' This script supports FreeBSD or CentOS7 server...')
