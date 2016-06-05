@@ -36,6 +36,14 @@ def vhhtmlwriter():
     with open(os.getcwd()+'/output/index.html', 'wb') as indhtml:
         indhtml.write(outputnghText)
 
+def sqlservicecheck(pidfile, pid):
+    if pidfile == pid:
+        print('SQL service already running...')
+        pass
+    else:
+        print('SQL service is not running...')
+        sys.exit()
+
 def prandwainput():
     print('Virtual host '+sitename+' already configured...')
     print(' 1. To add MySQL database for this virtual host write 1 and press "Enter"!!!')
@@ -109,12 +117,7 @@ def dbornotselect():
         if osver == 'FreeBSD' and ftype >= 10:
             mysqlpidf = run('cat /var/db/mysql/*.pid')
             mysqlpid = run('ps waux|grep /usr/local/libexec/mysqld | grep -v grep | awk \'{ print $2 }\'')
-            if mysqlpidf == mysqlpid:
-                print(' You have already running MySQL database server...')
-                pass
-            else:
-                print(' Please check SQL service!!!')
-                sys.exit()
+            sqlservicecheck(mysqlpid, mysqlpidf)
             dbcreds()
             createmysqldb()
             inphpcreater()
@@ -122,12 +125,7 @@ def dbornotselect():
         elif osver == 'Linux' and lintype == 'CentOS':
             msqlpid = run('cat /var/run/mariadb/mariadb.pid')
             msqlpidfile = run('ps waux|grep mysql | grep -v grep| grep -v safe | awk \'{ print $2 }\'')
-            if msqlpid == msqlpidfile:
-                print(' You have already running MySQL database server...')
-                pass
-            else:
-                print(' Please check SQL service!!!')
-                sys.exit()
+            sqlservicecheck(msqlpid, msqlpidfile)
             dbcreds()
             createmysqldb()
             inphpcreater()
@@ -138,12 +136,7 @@ def dbornotselect():
         if osver == 'FreeBSD' and ftype >= 10:
             psqlpidf = run('cat /usr/local/pgsql/data/postmaster.pid | head -1')
             psqlpid = run('ps waux|grep /usr/local/bin/postgres | grep -v grep | awk \'{ print $2 }\'')
-            if psqlpid == psqlpidf:
-                print(' You have already running PostgreSQL database server...')
-                pass
-            else:
-                print(' Please check SQL service!!!')
-                sys.exit()
+            sqlservicecheck(psqlpid, psqlpidf)
             dbcreds()
             oversitepass = "'\\'%s\\''" % sitedbpasswd
             run('su - pgsql -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
@@ -154,12 +147,7 @@ def dbornotselect():
         elif osver == 'Linux' and lintype == 'CentOS':
             pgsqlpidf =  run('cat /var/run/postgresql/.s.PGSQL.5432.lock | head -1')
             pgsqlpid = run('ps waux|grep /usr/bin/postgres | grep -v grep | awk \'{ print $2 }\'')
-            if pgsqlpid == pgsqlpidf:
-                print(' You have already running PostgreSQL database server...')
-                pass
-            else:
-                print(' Please check SQL service!!!')
-                sys.exit()
+            sqlservicecheck(pgsqlpid, pgsqlpidf)
             dbcreds()
             oversitepass = "'\\'%s\\''" % sitedbpasswd
             run('su - postgres -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
