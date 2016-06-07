@@ -111,6 +111,16 @@ def createmysqldb():
     run('mysql -u root -p\'freebsd\' -e "GRANT ALL PRIVILEGES ON '+sitedb+'.* TO '+sitedbuser+'@localhost IDENTIFIED BY \''+sitedbpasswd+'\';"')
     run('mysql -u root -p\'freebsd\' -e "FLUSH PRIVILEGES;"')
 
+cuser = 'postgres'
+fuser = 'pgsql'
+def createpgsqldb(username):
+    oversitepass = "'\\'%s\\''" % sitedbpasswd
+    run('su - '+username+' -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
+    run('su - '+username+' -c "psql -c \'CREATE USER '+sitedbuser+' WITH PASSWORD '+oversitepass+';\'"')
+    run('su - '+username+' -c "psql -c \'GRANT ALL PRIVILEGES ON DATABASE '+sitedb+' TO '+sitedbuser+';\'"')
+    run('su - '+username+' -c "psql -c \'CREATE TABLE book( bookid CHAR(255), bookname CHAR(255), author CHAR(255), publisher CHAR(255), dop CHAR(255), price CHAR(255) );\' '+sitedb+'"')
+    run('su - '+username+' -c "psql -c \'GRANT ALL PRIVILEGES ON TABLE book  TO '+sitedbuser+';\' '+sitedb+'"')
+
 def dbornotselect():
     if inst == "1":
         print(' You have chose MySQL with PHP-FPM!')
@@ -138,23 +148,13 @@ def dbornotselect():
             psqlpid = run('ps waux|grep /usr/local/bin/postgres | grep -v grep | awk \'{ print $2 }\'')
             sqlservicecheck(psqlpid, psqlpidf)
             dbcreds()
-            oversitepass = "'\\'%s\\''" % sitedbpasswd
-            run('su - pgsql -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
-            run('su - pgsql -c "psql -c \'CREATE USER '+sitedbuser+' WITH PASSWORD '+oversitepass+';\'"')
-            run('su - pgsql -c "psql -c \'GRANT ALL PRIVILEGES ON DATABASE '+sitedb+' TO '+sitedbuser+';\'"')
-            run('su - pgsql -c "psql -c \'CREATE TABLE book( bookid CHAR(255), bookname CHAR(255), author CHAR(255), publisher CHAR(255), dop CHAR(255), price CHAR(255) );\' '+sitedb+'"')
-            run('su - pgsql -c "psql -c \'GRANT ALL PRIVILEGES ON TABLE book  TO '+sitedbuser+';\' '+sitedb+'"')
+            createpgsqldb(fuser)
         elif osver == 'Linux' and lintype == 'CentOS':
             pgsqlpidf =  run('cat /var/run/postgresql/.s.PGSQL.5432.lock | head -1')
             pgsqlpid = run('ps waux|grep /usr/bin/postgres | grep -v grep | awk \'{ print $2 }\'')
             sqlservicecheck(pgsqlpid, pgsqlpidf)
             dbcreds()
-            oversitepass = "'\\'%s\\''" % sitedbpasswd
-            run('su - postgres -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
-            run('su - postgres -c "psql -c \'CREATE USER '+sitedbuser+' WITH PASSWORD '+oversitepass+';\'"')
-            run('su - postgres -c "psql -c \'GRANT ALL PRIVILEGES ON DATABASE '+sitedb+' TO '+sitedbuser+';\'"')
-            run('su - postgres -c "psql -c \'CREATE TABLE book( bookid CHAR(255), bookname CHAR(255), author CHAR(255), publisher CHAR(255), dop CHAR(255), price CHAR(255) );\' '+sitedb+'"')
-            run('su - postgres -c "psql -c \'GRANT ALL PRIVILEGES ON TABLE book  TO '+sitedbuser+';\' '+sitedb+'"')
+            createpgsqldb(cuser)
         else:
             print(' Server type is not detected!!!')
         pgphpcreater()

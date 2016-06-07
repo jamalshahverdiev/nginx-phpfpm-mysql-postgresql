@@ -103,6 +103,21 @@ def phpfpmconf():
     run('/usr/local/etc/rc.d/php-fpm start')
     run('service nginx restart')
 
+def createmysqldb():
+    run('mysql -u root -p\'freebsd\' -e "CREATE DATABASE '+sitedb+';"')
+    run('mysql -u root -p\'freebsd\' -e "GRANT ALL PRIVILEGES ON '+sitedb+'.* TO '+sitedbuser+'@localhost IDENTIFIED BY \''+sitedbpasswd+'\';"')
+    run('mysql -u root -p\'freebsd\' -e "FLUSH PRIVILEGES;"')
+
+cuser = 'postgres'
+fuser = 'pgsql'
+def createpgsqldb(username):
+    oversitepass = "'\\'%s\\''" % sitedbpasswd
+    run('su - '+username+' -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
+    run('su - '+username+' -c "psql -c \'CREATE USER '+sitedbuser+' WITH PASSWORD '+oversitepass+';\'"')
+    run('su - '+username+' -c "psql -c \'GRANT ALL PRIVILEGES ON DATABASE '+sitedb+' TO '+sitedbuser+';\'"')
+    run('su - '+username+' -c "psql -c \'CREATE TABLE book( bookid CHAR(255), bookname CHAR(255), author CHAR(255), publisher CHAR(255), dop CHAR(255), price CHAR(255) );\' '+sitedb+'"')
+    run('su - '+username+' -c "psql -c \'GRANT ALL PRIVILEGES ON TABLE book  TO '+sitedbuser+';\' '+sitedb+'"')
+
 def fmysqlinstaller():
     print(' You have chose MySQL with PHP-FPM!')
     print(' Please be patient, it will take some time...')
@@ -115,9 +130,7 @@ def fmysqlinstaller():
     msqlpidf = run('cat /var/db/mysql/*.pid')
     sqlservicecheck(msqlpidf, msqlpid)
     dbcreds()
-    run('mysql -u root -p\'freebsd\' -e "CREATE DATABASE '+sitedb+';"')
-    run('mysql -u root -p\'freebsd\' -e "GRANT ALL PRIVILEGES ON '+sitedb+'.* TO '+sitedbuser+'@localhost IDENTIFIED BY \''+sitedbpasswd+'\';"')
-    run('mysql -u root -p\'freebsd\' -e "FLUSH PRIVILEGES;"')
+    createmysqldb()
     phpfpmconf()
     inphpcreater()
     print('MySQL, Nginx and PHP-FPM installed and configured...')
@@ -125,6 +138,7 @@ def fmysqlinstaller():
 def fpgsqlinstaller():
     print(' You have chose PostgreSQL with PHP-FPM!')
     print(' Please be patient, it will take some time...')
+    run('pkg install -y postgresql93-client')
     run('pkg install -y postgresql93-server php56 php56-pgsql ; sysrc postgresql_enable="YES" ; /usr/local/etc/rc.d/postgresql initdb')
     put(os.getcwd()+'/jinja2temps/f10postresql.conf', '/usr/local/pgsql/data/postgresql.conf')
     put(os.getcwd()+'/jinja2temps/f10pg_hba.conf', '/usr/local/pgsql/data/pg_hba.conf')
@@ -134,12 +148,7 @@ def fpgsqlinstaller():
     sqlservicecheck(pgsqlpidf, pgsqlpid)
     run('su - pgsql -c "createdb"')
     dbcreds()
-    oversitepass = "'\\'%s\\''" % sitedbpasswd
-    run('su - pgsql -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
-    run('su - pgsql -c "psql -c \'CREATE USER '+sitedbuser+' WITH PASSWORD '+oversitepass+';\'"')
-    run('su - pgsql -c "psql -c \'GRANT ALL PRIVILEGES ON DATABASE '+sitedb+' TO '+sitedbuser+';\'"')
-    run('su - pgsql -c "psql -c \'CREATE TABLE book( bookid CHAR(255), bookname CHAR(255), author CHAR(255), publisher CHAR(255), dop CHAR(255), price CHAR(255) );\' '+sitedb+'"')
-    run('su - pgsql -c "psql -c \'GRANT ALL PRIVILEGES ON TABLE book  TO '+sitedbuser+';\' '+sitedb+'"')
+    createpgsqldb(fuser)
     phpfpmconf()
     pgphpcreater()
     print('PostgreSQL, Nginx and PHP-FPM installed and configured...')
@@ -171,9 +180,7 @@ def c7mysqlinstaller():
     msqlpid = run('cat /var/run/mariadb/mariadb.pid')
     sqlservicecheck(msqlpidfile, msqlpid)
     dbcreds()
-    run('mysql -u root -p\'freebsd\' -e "CREATE DATABASE '+sitedb+';"')
-    run('mysql -u root -p\'freebsd\' -e "GRANT ALL PRIVILEGES ON '+sitedb+'.* TO '+sitedbuser+'@localhost IDENTIFIED BY \''+sitedbpasswd+'\';"')
-    run('mysql -u root -p\'freebsd\' -e "FLUSH PRIVILEGES;"')
+    createmysqldb()
     inphpcreater()
     run('systemctl restart nginx')
     print('MySQL, Nginx and PHP-FPM installed and configured...')
@@ -194,12 +201,7 @@ def c7pgsqlinstaller():
     sqlservicecheck(psqlpidf, psqlpid)
     run('su - postgres -c "createdb"')
     dbcreds()
-    oversitepass = "'\\'%s\\''" % sitedbpasswd
-    run('su - postgres -c "psql -c \'CREATE DATABASE '+sitedb+';\'"')
-    run('su - postgres -c "psql -c \'CREATE USER '+sitedbuser+' WITH PASSWORD '+oversitepass+';\'"')
-    run('su - postgres -c "psql -c \'GRANT ALL PRIVILEGES ON DATABASE '+sitedb+' TO '+sitedbuser+';\'"')
-    run('su - postgres -c "psql -c \'CREATE TABLE book( bookid CHAR(255), bookname CHAR(255), author CHAR(255), publisher CHAR(255), dop CHAR(255), price CHAR(255) );\' '+sitedb+'"')
-    run('su - postgres -c "psql -c \'GRANT ALL PRIVILEGES ON TABLE book  TO '+sitedbuser+';\' '+sitedb+'"')
+    createpgsqldb(cuser)
     phpfpmconf()
     pgphpcreater()
     print('PostgreSQL, Nginx and PHP-FPM installed and configured...')
