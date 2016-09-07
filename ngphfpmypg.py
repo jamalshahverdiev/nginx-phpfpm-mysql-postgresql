@@ -213,11 +213,13 @@ with settings(
     osver = run('uname -s')
     lintype = run('cat /etc/redhat-release | awk \'{ print $1 }\'')
     ftype = run('uname -v | awk \'{ print $2 }\' | cut -f1 -d \'.\'')
+
     if osver == 'FreeBSD' and ftype >= 10:
         print(' This is FreeBSD server...')
         getnginxbin = run('which nginx')
         nginxpidf = run('cat /var/run/nginx.pid')
         nginxpid = run('ps waux | grep nginx | grep root | grep -v grep | awk \'{ print $2 }\'')
+
         if getnginxbin == '/usr/local/sbin/nginx' and nginxpidf == nginxpid:
             ngprintexit()
         elif getnginxbin != '/usr/local/sbin/nginx':
@@ -231,17 +233,20 @@ with settings(
             put(os.getcwd()+'/output/index.html', '/var/www/'+sitename+'/html/')
             run('ln -s /usr/local/etc/nginx/sites-available/* /usr/local/etc/nginx/sites-enabled/ ; service nginx restart')
             prandwainput()
+
             if inst == "1":
                 fmysqlinstaller()
             elif inst == "2":
                 fpgsqlinstaller()
             else:
                 print('You pressed "Enter" button, exiting!!!')
+
     elif osver == 'Linux' and lintype == 'CentOS':
         print(' This is CentOS server...')
         getlngdpack = run('which nginx')
         ngpidfile = run('cat /var/run/nginx.pid')
         ngpid = run('ps waux | grep nginx | grep root | grep -v grep | awk \'{ print $2 }\'')
+
         if getlngdpack == '/usr/sbin/nginx' and ngpidfile == ngpid:
             ngprintexit()
         elif getlngdpack != '/usr/sbin/nginx':
@@ -251,11 +256,13 @@ with settings(
             vhhtmlwriter()
             c7vhostcreate()
             prandwainput()
+
             if inst == "1":
                 c7mysqlinstaller()
             elif inst == "2":
                 c7pgsqlinstaller()
             else:
                 print('You pressed "Enter" button, exiting!!!')
+
     else:
         print(' This script supports FreeBSD or CentOS7 server...')

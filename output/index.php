@@ -3,7 +3,7 @@ ini_set('display_errors', 1); //Enable error print to the screen
 $dblocation = "localhost"; //IP address for the database
 $dbname = "linuxdb"; //Database name to which we will connect
 $dbuser = "linuxuser"; //New username for new database
-$dbpasswd = "jh"; //Password for the new username
+$dbpasswd = "freebsd"; //Password for the new username
 
 $dbcnx = @mysql_connect($dblocation, $dbuser, $dbpasswd);
 if (!$dbcnx){

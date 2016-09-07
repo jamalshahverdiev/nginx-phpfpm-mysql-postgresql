@@ -124,6 +124,7 @@ def createpgsqldb(username):
 def dbornotselect():
     if inst == "1":
         print(' You have chose MySQL with PHP-FPM!')
+
         if osver == 'FreeBSD' and ftype >= 10:
             mysqlpidf = run('cat /var/db/mysql/*.pid')
             mysqlpid = run('ps waux|grep /usr/local/libexec/mysqld | grep -v grep | awk \'{ print $2 }\'')
@@ -141,8 +142,10 @@ def dbornotselect():
             inphpcreater()
             run('systemctl restart nginx ; systemctl restart php-fpm')
         print('MySQL database and Nginx configured for your site: '+sitename+'')
+
     elif inst == "2":
         print(' You have chose PostgreSQL with PHP-FPM!')
+
         if osver == 'FreeBSD' and ftype >= 10:
             psqlpidf = run('cat /usr/local/pgsql/data/postmaster.pid | head -1')
             psqlpid = run('ps waux|grep /usr/local/bin/postgres | grep -v grep | awk \'{ print $2 }\'')
@@ -157,8 +160,10 @@ def dbornotselect():
             createpgsqldb(cuser)
         else:
             print(' Server type is not detected!!!')
+
         pgphpcreater()
         print('PostgreSQL database and Nginx configured for your site: '+sitename+'')
+
     else:
         sys.exit()
 
@@ -169,12 +174,14 @@ with settings(
     osver = run('uname -s')
     lintype = run('cat /etc/redhat-release | awk \'{ print $1 }\'')
     ftype = run('uname -v | awk \'{ print $2 }\' | cut -f1 -d \'.\'')
+
     if osver == 'FreeBSD' and ftype >= 10:
         print(' This is FreeBSD server...')
         domex = run('ls -la /usr/local/etc/nginx/sites-enabled/ | grep '+sitename+' | awk \'{ print $9 }\' | cut -f1,2 -d \'.\'')
         checkvhexists()
         nginxpidf = run('cat /var/run/nginx.pid')
         nginxpid = run('ps waux | grep nginx | grep root | grep -v grep | awk \'{ print $2 }\'')
+
         if nginxpid == nginxpidf:
             print(' You have already running Nginx web server...')
             vhhtmlwriter()
@@ -182,6 +189,7 @@ with settings(
         else:
             print(' Nginx server is not running. For install Nginx web server please use ./ngphfpmypg.py script...')
             sys.exit()
+
         prandwainput()
         dbornotselect()
 
@@ -191,6 +199,7 @@ with settings(
         checkvhexists()
         ngpidf = run('cat /var/run/nginx.pid')
         ngpid = run('ps waux | grep nginx | grep root | grep -v grep | awk \'{ print $2 }\'')
+
         if ngpid == ngpidf:
             print(' You have already running Nginx web server...')
             vhhtmlwriter()
@@ -198,6 +207,7 @@ with settings(
         else:
             print(' Nginx server is not running. For install Nginx web server please use ./ngphfpmypg.py script...')
             sys.exit()
+
         prandwainput()
         dbornotselect()
 
